@@ -2,6 +2,11 @@ import pyaudio
 import wave
 import whisperx
 import os
+from colorama import Fore, Style, init
+
+# Initialize colorama for colored text output
+init(autoreset=True)
+
 
 def record_chunk(p, stream, file_path, device_index, chunk_length=3, rate=16000, chunk=1024, format=pyaudio.paInt16):
     frames = []
@@ -20,7 +25,7 @@ def transcribe_chunk(model, chunk_file):
     result = model.transcribe(audio)
     return result["segments"]
 
-def main(device_index=None, identifier=""):
+def main(device_index=None, identifier="", num_devices=1):
     if device_index is None:
         device_index = select_audio_device() # Get the selected device index
         
@@ -36,7 +41,10 @@ def main(device_index=None, identifier=""):
             record_chunk(p, stream, chunk_file, device_index)  # Pass the device index to record_chunk
             segments = transcribe_chunk(model, chunk_file)  # Transcribe the chunk
             transcription = " ".join(segment['text'] for segment in segments)  # Join segments into a single string
-            print(transcription)
+            colors = [Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE]
+            color_index = device_index % len(colors) 
+
+            print(f'{colors[color_index]}{device_index}: {transcription}')
             os.remove(chunk_file)
 
             accumulated_transcript += transcription + " "
@@ -44,11 +52,11 @@ def main(device_index=None, identifier=""):
     except KeyboardInterrupt:
         print("KeyboardInterrupt")
 
-        with open(f"log_{identifier}.txt", "w") as f:
+        with open(f"logs/log_{identifier}.txt", "w") as f:
             f.write(accumulated_transcript)
     finally:
-        # print(f"{identifier}:"+ accumulated_transcript)
-        print("log:" + accumulated_transcript)
+        print(f"{identifier}:"+ accumulated_transcript)
+        #print("log:" + accumulated_transcript)
         stream.stop_stream()
         stream.close()
         p.terminate()

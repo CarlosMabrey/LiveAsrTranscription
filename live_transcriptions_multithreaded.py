@@ -2,11 +2,11 @@ import multiprocessing
 from live_transcription import main
 import pyaudio
 
-def start_transcription_process(device_index):
-    # Pass device_index to main function for unique identification
-    main(device_index, identifier=f"Microphone {device_index}")
+def start_transcription_process(device_index, num_devices):
+    # Pass device_index and num_devices to main function for unique identification
+    main(device_index, identifier=f"Microphone {device_index}", num_devices=num_devices)
 
-def get_device_indices():
+def get_device_indices(devices=None):
     print("Available devices:")
     p = pyaudio.PyAudio()
     for i in range(p.get_device_count()):
@@ -16,8 +16,9 @@ def get_device_indices():
 
 if __name__ == "__main__":
     device_indices = get_device_indices()
+    num_devices = len(device_indices)
 
-    processes = [multiprocessing.Process(target=start_transcription_process, args=(device_index,)) for device_index in device_indices]
+    processes = [multiprocessing.Process(target=start_transcription_process, args=(device_index, num_devices)) for device_index in device_indices]
 
     for process in processes:
         process.start()
